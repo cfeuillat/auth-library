@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"auth-library/entity"
+	"auth-library/backend/entity"
 	"database/sql"
 	"fmt"
 
@@ -32,7 +32,7 @@ func InitDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func InserUser(db *sql.DB, user entity.User) error {
+func InsertUser(db *sql.DB, user entity.User) error {
 	// SQL statement for inserting a new user
 	insertUserSQL := `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`
 
@@ -46,7 +46,7 @@ func InserUser(db *sql.DB, user entity.User) error {
 
 }
 
-func FindUser(db *sql.DB, user entity.User) error {
+func FindUserPassword(db *sql.DB, user entity.User) (string, error)  {
 	// SQL statement to find the user's hashed password by email or name
 	findPasswordSQL := `SELECT password FROM users WHERE email = ?`
 
@@ -56,14 +56,10 @@ func FindUser(db *sql.DB, user entity.User) error {
 	err := db.QueryRow(findPasswordSQL, user.Email).Scan(&storedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fmt.Errorf("user not found")
+			return "", err
 		}
-		return fmt.Errorf("failed to query user: %w", err)
+		return "", fmt.Errorf("failed to query user: %w", err)
 	}
 
-	if storedPassword != user.Password {
-		return fmt.Errorf("incorrect password")
-	}
-
-	return nil
+	return storedPassword, nil
 }
